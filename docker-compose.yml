@@ -1,6 +1,19 @@
-version: "3.9"
-
 services:
+  docker:
+    image: docker:dind
+    container_name: docker
+    privileged: true
+    command: --storage-driver=overlay2
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins_certs:/certs/client
+      - docker_cache:/var/lib/docker
+    networks:
+      jenkins-net:
+        aliases:
+          - docker
+
   jenkins:
     image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
@@ -21,25 +34,10 @@ services:
     depends_on:
       - docker
 
-  docker:
-    image: docker:dind
-    container_name: docker
-    privileged: true
-    command: --storage-driver=overlay2
-    environment:
-      - DOCKER_TLS_CERTDIR=/certs
-    volumes:
-      - jenkins_certs:/certs/client
-      - jenkins_home:/var/jenkins_home
-    networks:
-      jenkins-net:
-        aliases:
-          - docker
-
 volumes:
   jenkins_home:
   jenkins_certs:
+  docker_cache:
 
 networks:
   jenkins-net:
-
