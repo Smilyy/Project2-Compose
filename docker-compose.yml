@@ -13,13 +13,13 @@ services:
   # -------------------------------------------------
   jenkins:
     image: jenkins/jenkins:lts-jdk17   # Official Jenkins LTS image (with Java 17)
-    container_name: jenkins            # a container name
-    privileged: true                   # Gives Jenkins permission to access the Docker daemon
-    user: root                         # Run as root to allow plugins and CLI tools installation
+    container_name: jenkins            # Container name
+    privileged: true                   # Gives Jenkins access to the Docker daemon
+    user: root                         # Allows plugins and CLI tools installation
 
     ports:
       - "8080:8080"                    # Map Jenkins UI to localhost:8080
-      - "50000:50000"                  # Port for Jenkins build agents 
+      - "50000:50000"                  
 
     environment:
       # Enable Jenkins to talk to the Docker daemon 
@@ -28,12 +28,12 @@ services:
       - DOCKER_TLS_VERIFY=1            # Enforce TLS verification for secure connection
 
     volumes:
-      - jenkins_home:/var/jenkins_home # Persistent Jenkins data (eg.,plugins, jobs, config)
+      - jenkins_home:/var/jenkins_home # Persistent Jenkins data (plugins, jobs, config etc.)
       - jenkins_certs:/certs/client:ro  # Mount read-only Docker client certs
-      # note: no /var/run/docker.sock mount here because we only uses DinD daemon
+      # no /var/run/docker.sock mount here because we only uses DinD daemon
 
     networks:
-      - jenkins-net                    # Connect Jenkins to the same internal network as DinD
+      - jenkins-net                    # Connect Jenkins and DinD to the same internal network
     depends_on:
       - docker                         # Start Docker service before Jenkins
 
@@ -42,24 +42,24 @@ services:
   # -------------------------------------------------
   docker:
     image: docker:dind                 # Official Docker-in-Docker image 
-    container_name: docker             # The alias Jenkins connects to via tcp://docker:2376 (same as the file on blackboard)
+    container_name: docker             # The alias Jenkins connects to via tcp://docker:2376 (the same port with Dind-in-docker instruction file on blackboard)
     privileged: true                   # Enable Docker to run inside the container
     command: --storage-driver=overlay2 # Use overlay2 for better performance and stability
 
     environment:
-      - DOCKER_TLS_CERTDIR=/certs      # where Docker stores its TLS certs
+      - DOCKER_TLS_CERTDIR=/certs      # This is where Docker stores its TLS certs
 
     volumes:
       - jenkins_certs:/certs/client    # Shared TLS certificates for secure comms with Jenkins
-      - jenkins_home:/var/jenkins_home # Allows shared workspace if needed
+      - jenkins_home:/var/jenkins_home # Allows shared workspace 
 
     networks:
       jenkins-net:
         aliases:
-          - docker                     # Network alias so hostname 'docker' resolves correctly
+          - docker                     # Network alias so hostname 'docker' can resolve correctly
 
 # -------------------------------------------------
-# Named Volumes - Persist data between container restarts
+# Named Volumes - Persist data 
 # -------------------------------------------------
 volumes:
   jenkins_home:   # Stores Jenkins job data and plugins
@@ -69,4 +69,4 @@ volumes:
 # Network - Enables internal communication between Jenkins and DinD
 # -------------------------------------------------
 networks:
-  jenkins-net:    # Simple bridge network automatically created when we do docker compose (compose up)
+  jenkins-net:    # Simple bridge network automatically created when we do docker compose (docker compose up)
