@@ -1,0 +1,16 @@
+# === Docker ===
+# build artifacts
+**/node_modules
+**/npm-debug.log
+**/Dockerfile~
+**/docker-compose.override.yml
+
+# docker build cache
+*.pid
+*.seed
+*.pid.lock
+
+# docker volumes
+data/
+logs/
+tmp/
